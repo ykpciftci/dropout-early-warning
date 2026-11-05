@@ -16,3 +16,4 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+Download the dataset, unzip it, and place it at data/raw/data.csv
