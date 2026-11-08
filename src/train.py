@@ -63,8 +63,8 @@ def main():
 
     model.fit(X_train, y_train)
     config.MODEL_DIR.mkdir(exist_ok=True)
-    joblib.dump(model, config.MODEL_DIR / "enrollment_model.joblib")
-    print(f"Model saved to {config.MODEL_DIR}")
+    joblib.dump(model, config.ENROLLMENT_MODEL_PATH)
+    print(f"Model saved to {config.ENROLLMENT_MODEL_PATH}")
 
 
 if __name__ == "__main__":
