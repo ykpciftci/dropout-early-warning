@@ -92,3 +92,27 @@ def test_split_data_x_and_y_are_aligned(splits):
     df, X_train, X_test, y_train, y_test = splits
     assert X_train.index.equals(y_train.index)
     assert X_test.index.equals(y_test.index)
+
+
+@pytest.fixture
+def real_data():
+    return load_data(config.DATA_PATH, config.TARGET)
+
+
+def test_models_share_the_same_split(real_data):
+    X_train_e, X_test_e, _, _ = split_data(
+        df=real_data,
+        features=config.ENROLLMENT_MODEL_FEATURES,
+        target=config.TARGET,
+        random_state=config.RANDOM_STATE,
+        test_size=config.TEST_SIZE,
+    )
+    X_train_s, X_test_s, _, _ = split_data(
+        df=real_data,
+        features=config.SEMESTER_1_MODEL_FEATURES,
+        target=config.TARGET,
+        random_state=config.RANDOM_STATE,
+        test_size=config.TEST_SIZE,
+    )
+    assert list(X_test_e.index) == list(X_test_s.index)
+    assert list(X_train_e.index) == list(X_train_s.index)

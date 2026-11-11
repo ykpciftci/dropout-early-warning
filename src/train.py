@@ -37,11 +37,11 @@ def cross_validate_model(name, model, random_state, X, y):
     print(f"{name} f1_score: {f1_scores.mean():.3f} +/- {f1_scores.std():.3f}")
 
 
-def main():
-    df = load_data(path=config.DATA_PATH, target=config.TARGET)
+def train_and_save(df, name, features, model_path):
+
     X_train, X_test, y_train, y_test = split_data(
         df=df,
-        features=config.ENROLLMENT_MODEL_FEATURES,
+        features=features,
         target=config.TARGET,
         random_state=config.RANDOM_STATE,
         test_size=config.TEST_SIZE,
@@ -50,21 +50,28 @@ def main():
     categoric_features = [
         f for f in config.CATEGORICAL_FEATURES if f in X_train.columns
     ]
-
     model = build_pipeline(numerical=numeric_features, categorical=categoric_features)
-
     cross_validate_model(
-        "Enrollment Model",
+        name,
         model=model,
         random_state=config.RANDOM_STATE,
         X=X_train,
         y=y_train,
     )
-
     model.fit(X_train, y_train)
     config.MODEL_DIR.mkdir(exist_ok=True)
-    joblib.dump(model, config.ENROLLMENT_MODEL_PATH)
-    print(f"Model saved to {config.ENROLLMENT_MODEL_PATH}")
+    joblib.dump(model, model_path)
+    print(f"Model saved to {model_path}")
+
+
+def main():
+    df = load_data(path=config.DATA_PATH, target=config.TARGET)
+    train_and_save(
+        df, "Enrollment", config.ENROLLMENT_MODEL_FEATURES, config.ENROLLMENT_MODEL_PATH
+    )
+    train_and_save(
+        df, "Semester 1", config.SEMESTER_1_MODEL_FEATURES, config.SEMESTER_1_MODEL_PATH
+    )
 
 
 if __name__ == "__main__":
