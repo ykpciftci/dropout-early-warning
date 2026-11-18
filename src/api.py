@@ -7,6 +7,7 @@ from src import config
 
 app = FastAPI()
 
+
 enrollment_model = joblib.load(config.ENROLLMENT_MODEL_PATH)
 semester_1_model = joblib.load(config.SEMESTER_1_MODEL_PATH)
 
@@ -37,6 +38,30 @@ class EnrollmentFeatures(BaseModel):
     gdp: float = Field(alias="GDP", ge=-15.0, le=17.0)
 
 
+class Semester1Features(EnrollmentFeatures):
+    first_sem_credited: int = Field(alias="Curricular units 1st sem (credited)", ge=0)
+    first_sem_enrolled: int = Field(alias="Curricular units 1st sem (enrolled)", ge=0)
+    first_sem_evaluations: int = Field(
+        alias="Curricular units 1st sem (evaluations)", ge=0
+    )
+    first_sem_without_evaluations: int = Field(
+        alias="Curricular units 1st sem (without evaluations)", ge=0
+    )
+    first_sem_approved: int = Field(alias="Curricular units 1st sem (approved)", ge=0)
+    first_sem_grade: float = Field(
+        alias="Curricular units 1st sem (grade)", ge=0, le=20
+    )
+
+
+def predict_dropout(model, features):
+    X = pd.DataFrame([features.model_dump(by_alias=True)])
+    probabilities = model.predict_proba(X)[0]
+    return {
+        "dropout": bool(probabilities[1] > 0.5),
+        "dropout_risk_score": round(float(probabilities[1]), 3),
+    }
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -44,10 +69,9 @@ def health_check():
 
 @app.post("/predict/enrollment")
 def predict_enrollment(enrollment_data: EnrollmentFeatures):
-    X = pd.DataFrame([enrollment_data.model_dump(by_alias=True)])
-    predict_probabilities = enrollment_model.predict_proba(X)[0]
+    return predict_dropout(features=enrollment_data, model=enrollment_model)
 
-    return {
-        "dropout": bool(predict_probabilities[1] > 0.5),
-        "dropout_risk_score": round(float(predict_probabilities[1], 3)),
-    }
+
+@app.post("/predict/semester-1")
+def predict_semester_1(semester_1_data: Semester1Features):
+    return predict_dropout(features=semester_1_data, model=semester_1_model)
