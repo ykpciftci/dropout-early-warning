@@ -1,15 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel, Field
 import joblib
 import pandas as pd
+from functools import lru_cache
 
 from src import config
 
 app = FastAPI()
-
-
-enrollment_model = joblib.load(config.ENROLLMENT_MODEL_PATH)
-semester_1_model = joblib.load(config.SEMESTER_1_MODEL_PATH)
 
 
 class EnrollmentFeatures(BaseModel):
@@ -53,6 +50,18 @@ class Semester1Features(EnrollmentFeatures):
     )
 
 
+@lru_cache
+def get_enrollment_model():
+    enrollment_model = joblib.load(config.ENROLLMENT_MODEL_PATH)
+    return enrollment_model
+
+
+@lru_cache
+def get_semester_1_model():
+    semester_1_model = joblib.load(config.SEMESTER_1_MODEL_PATH)
+    return semester_1_model
+
+
 def predict_dropout(model, features):
     X = pd.DataFrame([features.model_dump(by_alias=True)])
     probabilities = model.predict_proba(X)[0]
@@ -68,10 +77,14 @@ def health_check():
 
 
 @app.post("/predict/enrollment")
-def predict_enrollment(enrollment_data: EnrollmentFeatures):
-    return predict_dropout(features=enrollment_data, model=enrollment_model)
+def predict_enrollment(
+    enrollment_data: EnrollmentFeatures, model=Depends(get_enrollment_model)
+):
+    return predict_dropout(features=enrollment_data, model=model)
 
 
 @app.post("/predict/semester-1")
-def predict_semester_1(semester_1_data: Semester1Features):
-    return predict_dropout(features=semester_1_data, model=semester_1_model)
+def predict_semester_1(
+    semester_1_data: Semester1Features, model=Depends(get_semester_1_model)
+):
+    return predict_dropout(features=semester_1_data, model=model)
