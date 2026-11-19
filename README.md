@@ -64,8 +64,33 @@ python -m src.evaluate
 ```bash
 pytest
 ```
+- To run API:
+    * Make sure you have trained the models first. models/ folder is not in the repo(gitignored)
+    - To train the models:
+    ```bash
+    python -m src.train
+    ```
+    
+     To start server:
+    ```bash
+    uvicorn src.api:app --reload
+    ```
+    * API endpoints can be accessed at http://127.0.0.1:8000/docs
+    * Endpoints:
+        -  GET /health
+        - POST /predict/enrollment: enrollment features only
+        - POST /predict/semester-1: enrollment plus 1st-semester features
+
+    * Schema for sample JSON request body can be found at API endpoints docs page. Use "Try it out" button.
+    * JSON response will look like:
+    ```
+    {"dropout": true, "dropout_risk_score":0.825}
+    ```
+    * dropout_risk_score is a risk score, not a calibrated probability, because of class_weight="balanced". The dropout flag uses 0.5 cutoff which we chose.
+
 
 ## Limitations
 
 - The data was obtained from a Portuguese institution. More, less or different data will be available for any other country's students and its institutions.
 - We did not account for students who are still enrolled, because their outcome is unknown; some of them may still drop out.
+
