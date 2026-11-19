@@ -7,18 +7,9 @@ from src.train import build_pipeline
 
 
 @pytest.fixture
-def sample_csv(tmp_path):
-    df_full = pd.read_csv(config.DATA_PATH, sep=";")
-    df_test = df_full.head(200)
-    path = tmp_path / "sample.csv"
-    df_test.to_csv(path, sep=";", index=False)
-    return path
+def training_data(real_sample_csv):
 
-
-@pytest.fixture
-def training_data(sample_csv):
-
-    df = load_data(sample_csv, target=config.TARGET)
+    df = load_data(real_sample_csv, target=config.TARGET)
     X_train, X_test, y_train, y_test = split_data(
         df=df,
         features=config.ENROLLMENT_MODEL_FEATURES,
