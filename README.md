@@ -88,9 +88,21 @@ pytest
     ```
     * dropout_risk_score is a risk score, not a calibrated probability, because of class_weight="balanced". The dropout flag uses 0.5 cutoff which we chose.
 
+- To run with Docker:
+    - if you haven't already trained the models, train the models first. They aren't stored in repository, and image copies them in.
+    ```bash
+    python -m src.train
+    ```
+    - Then build the image and run the container:
+    ```bash
+    docker build -t dropout-app .
+    docker run -p 8000:8000 dropout-app
+    ```
+    - API endpoints can be accessed at http://localhost:8000/docs
+    - Docker image includes trained models.
+    - requirements-api.txt contains the runtime dependencies used by the image, whereas requirements.txt is for the full development setup.
 
 ## Limitations
 
 - The data was obtained from a Portuguese institution. More, less or different data will be available for any other country's students and its institutions.
 - We did not account for students who are still enrolled, because their outcome is unknown; some of them may still drop out.
-
