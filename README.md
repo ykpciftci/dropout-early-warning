@@ -1,4 +1,9 @@
 # Dropout Early Warning
+[![Tests](https://github.com/ykpciftci/dropout-early-warning/actions/workflows/tests.yml/badge.svg)](https://github.com/ykpciftci/dropout-early-warning/actions/workflows/tests.yml)
+
+* Flags students at risk of dropping out. It runs for students at enrollment and at the end of semester 1.
+* On the test set, semester 1 model catches 84% of dropouts and almost halves missed dropouts compared to predicting at enrollment. (85 -> 46)
+* The app is built with scikit-learn and served with FastAPI. It is packaged with Docker and tested with CI.
 
 Spotting the students with potential to drop out matters. These students sometimes can be helped as the trouble they face might be easy to resolve for management. Even when these students can not be helped, the data might be useful for management to plan resource allocation accordingly.
 
@@ -50,57 +55,50 @@ Download the dataset, unzip it, and place it at data/raw/data.csv
 
 ## Usage
 
-- To train the models:
+### Train
 ```bash
 python -m src.train
 ```
 
-- To evaluate models:
+### Evaluate
 ```bash
 python -m src.evaluate
 ```
 
-- To run the tests:
+### Test
 ```bash
 pytest
 ```
-- To run API:
-    * Make sure you have trained the models first. models/ folder is not in the repo(gitignored)
-    - To train the models:
-    ```bash
-    python -m src.train
-    ```
-    
-     To start server:
-    ```bash
-    uvicorn src.api:app --reload
-    ```
-    * API endpoints can be accessed at http://127.0.0.1:8000/docs
-    * Endpoints:
-        -  GET /health
-        - POST /predict/enrollment: enrollment features only
-        - POST /predict/semester-1: enrollment plus 1st-semester features
+### Run the API
+Make sure you have trained the models first (see Train above). models/ folder is not in the repo (gitignored).
 
-    * Schema for sample JSON request body can be found at API endpoints docs page. Use "Try it out" button.
-    * JSON response will look like:
-    ```
-    {"dropout": true, "dropout_risk_score":0.825}
-    ```
-    * dropout_risk_score is a risk score, not a calibrated probability, because of class_weight="balanced". The dropout flag uses 0.5 cutoff which we chose.
+- To start server:
+```bash
+uvicorn src.api:app --reload
+```
+- API endpoints can be accessed at http://127.0.0.1:8000/docs
+- Endpoints:
+    -  GET /health
+    - POST /predict/enrollment: enrollment features only
+    - POST /predict/semester-1: enrollment plus 1st-semester features
 
-- To run with Docker:
-    - if you haven't already trained the models, train the models first. They aren't stored in repository, and image copies them in.
-    ```bash
-    python -m src.train
-    ```
-    - Then build the image and run the container:
-    ```bash
-    docker build -t dropout-app .
-    docker run -p 8000:8000 dropout-app
-    ```
-    - API endpoints can be accessed at http://localhost:8000/docs
-    - Docker image includes trained models.
-    - requirements-api.txt contains the runtime dependencies used by the image, whereas requirements.txt is for the full development setup.
+- Schema for sample JSON request body can be found at API endpoints docs page. Use "Try it out" button.
+- JSON response will look like:
+```
+{"dropout": true, "dropout_risk_score":0.825}
+```
+-  dropout_risk_score is a risk score, not a calibrated probability, because of class_weight="balanced". The dropout flag uses 0.5 cutoff which we chose.
+
+### Run with Docker
+- Train the models first (see Train above). They aren't stored in repository, and image copies them in.
+
+```bash
+docker build -t dropout-app .
+docker run -p 8000:8000 dropout-app
+```
+- API endpoints can be accessed at http://localhost:8000/docs
+- Docker image includes trained models.
+- requirements-api.txt contains the runtime dependencies used by the image, whereas requirements.txt is for the full development setup.
 
 ## Limitations
 
