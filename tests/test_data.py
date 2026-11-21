@@ -6,7 +6,7 @@ from src import config
 
 
 @pytest.fixture
-def sample_csv(tmp_path):
+def messy_columns_csv(tmp_path):
     df = pd.DataFrame(
         {
             "Course\t": [171, 9238, 9773, 9070, 171],
@@ -15,13 +15,13 @@ def sample_csv(tmp_path):
             "Target": ["Dropout", "Graduate", "Enrolled", "Graduate", "Dropout"],
         }
     )
-    path = tmp_path / "sample.csv"
+    path = tmp_path / "messy_columns.csv"
     df.to_csv(path, sep=";", index=False)
     return path
 
 
-def test_load_data_strips_column_names(sample_csv):
-    df = load_data(sample_csv, target="Target")
+def test_load_data_strips_column_names(messy_columns_csv):
+    df = load_data(messy_columns_csv, target="Target")
     assert list(df.columns) == [
         "Course",
         "Admission grade",
@@ -30,19 +30,19 @@ def test_load_data_strips_column_names(sample_csv):
     ]
 
 
-def test_load_data_maps_dropout_to_1(sample_csv):
-    df = load_data(sample_csv, target="Target")
+def test_load_data_maps_dropout_to_1(messy_columns_csv):
+    df = load_data(messy_columns_csv, target="Target")
     assert df["Target"].tolist() == [1, 0, 0, 1]
 
 
-def test_load_data_drops_enrolled(sample_csv):
-    df = load_data(sample_csv, target="Target")
+def test_load_data_drops_enrolled(messy_columns_csv):
+    df = load_data(messy_columns_csv, target="Target")
     assert len(df) == 4
 
 
 @pytest.fixture
-def splits():
-    df = load_data(config.DATA_PATH, config.TARGET)
+def splits(sample_df):
+    df = sample_df
     X_train, X_test, y_train, y_test = split_data(
         df=df,
         features=config.ENROLLMENT_MODEL_FEATURES,
@@ -80,11 +80,11 @@ def test_split_data_test_size(splits):
 def test_split_data_stratification(splits):
     df, X_train, X_test, y_train, y_test = splits
     assert y_train.value_counts(normalize=True)[1] == pytest.approx(
-        df["Target"].value_counts(normalize=True)[1], rel=0.01
+        df["Target"].value_counts(normalize=True)[1], abs=1 / len(y_train)
     )
 
     assert y_test.value_counts(normalize=True)[1] == pytest.approx(
-        df["Target"].value_counts(normalize=True)[1], rel=0.01
+        df["Target"].value_counts(normalize=True)[1], abs=1 / len(y_test)
     )
 
 
@@ -94,21 +94,16 @@ def test_split_data_x_and_y_are_aligned(splits):
     assert X_test.index.equals(y_test.index)
 
 
-@pytest.fixture
-def real_data():
-    return load_data(config.DATA_PATH, config.TARGET)
-
-
-def test_models_share_the_same_split(real_data):
+def test_models_share_the_same_split(sample_df):
     X_train_e, X_test_e, _, _ = split_data(
-        df=real_data,
+        df=sample_df,
         features=config.ENROLLMENT_MODEL_FEATURES,
         target=config.TARGET,
         random_state=config.RANDOM_STATE,
         test_size=config.TEST_SIZE,
     )
     X_train_s, X_test_s, _, _ = split_data(
-        df=real_data,
+        df=sample_df,
         features=config.SEMESTER_1_MODEL_FEATURES,
         target=config.TARGET,
         random_state=config.RANDOM_STATE,

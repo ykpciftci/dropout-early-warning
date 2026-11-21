@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src import config
-from src.data import load_data
 from src.api import app, get_enrollment_model, get_semester_1_model
 from src.train import build_pipeline
 
@@ -16,12 +15,6 @@ def train_small_model(df, features, target):
         numerical=numeric_features, categorical=categoric_features
     )
     return small_model.fit(X, y)
-
-
-@pytest.fixture
-def sample_df(real_sample_csv):
-    df = load_data(real_sample_csv, target=config.TARGET)
-    return df
 
 
 @pytest.fixture
